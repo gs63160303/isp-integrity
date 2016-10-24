@@ -67,11 +67,11 @@ public class AgentCommunicationMITM {
                 final char[] p1 = concat(prefix, padding);
                 final char[] newMessageChar = concat(p1, suffix);
 
-                print("newPT = %s", Arrays.toString(newMessageChar));
-
                 final byte[] newPt = new String(newMessageChar).getBytes("UTF-8");
                 final MessageDigest sha1 = MessageDigest.getInstance("SHA1");
-                final byte[] newTag = sha1.digest(newPt);
+                sha1.update(tag);
+                sha1.update("&waffle=liege".getBytes("UTF-8"));
+                final byte[] newTag = sha1.digest();
 
                 // print("data = %s", message);
                 print("newPt   = %s", hex(newPt));
