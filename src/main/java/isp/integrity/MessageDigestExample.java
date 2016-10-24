@@ -16,7 +16,7 @@ public class MessageDigestExample {
          * Select Message Digest algorithm and get new Message Digest object instance
          * http://docs.oracle.com/javase/6/docs/technotes/guides/security/StandardNames.html
          */
-        final MessageDigest digestAlgorithm = MessageDigest.getInstance("MD5");
+        final MessageDigest digestAlgorithm = MessageDigest.getInstance("SHA256");
 
         /**
          * STEP 2.
@@ -30,7 +30,5 @@ public class MessageDigestExample {
          */
         final String hashAsHex = DatatypeConverter.printHexBinary(hashed);
         System.out.println(hashAsHex);
-
-        System.out.println(Character.toString((char) 72));
     }
 }
