@@ -30,5 +30,7 @@ public class MessageDigestExample {
          */
         final String hashAsHex = DatatypeConverter.printHexBinary(hashed);
         System.out.println(hashAsHex);
+
+        System.out.println(Character.toString((char) 72));
     }
 }
