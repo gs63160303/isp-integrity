@@ -7,15 +7,15 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class AgentCommunicationMITM {
-    public static char[] concat(char[] first, char[] second) {
-        char[] result = Arrays.copyOf(first, first.length + second.length);
+    public static byte[] concat(byte[] first, byte[] second) {
+        byte[] result = Arrays.copyOf(first, first.length + second.length);
         System.arraycopy(second, 0, result, first.length, second.length);
         return result;
     }
 
     public static void main(String[] args) throws NoSuchAlgorithmException {
-        // secred shared between client1 and the service
-        final String secret = "secret";
+        // secret shared between client1 and the service
+        final String secret = "secretsecret22";
 
         final BlockingQueue<byte[]> alice2mitm = new LinkedBlockingQueue<>();
         final BlockingQueue<byte[]> mitm2service = new LinkedBlockingQueue<>();
@@ -26,8 +26,9 @@ public class AgentCommunicationMITM {
                 final String message = "count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo";
                 final byte[] pt = message.getBytes("UTF-8");
 
-                final MessageDigest sha1 = MessageDigest.getInstance("SHA1");
-                final byte[] tag = sha1.digest((secret + message).getBytes("UTF-8"));
+                final MessageDigest d = MessageDigest.getInstance(cipher);
+                d.update(secret.getBytes("UTF-8"));
+                final byte[] tag = d.digest(pt);
 
                 print("data = %s", message);
                 print("pt   = %s", hex(pt));
@@ -43,35 +44,34 @@ public class AgentCommunicationMITM {
             public void execute() throws Exception {
                 final byte[] pt = incoming.take();
                 final byte[] tag = incoming.take();
-                print("data = %s", new String(pt, "UTF-8"));
-                print("pt   = %s", hex(pt));
-                print("tag  = %s", hex(tag));
+                final String message = new String(pt, "UTF-8");
+                print("data    = %s", message);
+                print("pt      = %s", hex(pt));
+                print("tag     = %s", hex(tag));
                 //outgoing.put(pt);
                 //outgoing.put(tag);
-
 
                 // TODO: manipulate the parameters and send another valid request
                 // You can assume that when the parameters repeat, the service uses the right-most value
                 // For instance, to change the name of the waffle, you could send the following request
                 //     count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo&waffle=liege
-                final String original = "count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo";
-                final char[] prefix = original.toCharArray();
-                final char[] padding = new char[]{
-                        80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                final byte[] padding = new byte[]{
+                        (byte) 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                        0, 0, 0, 0, 0, 0, 2, 28
+                        0, 0, 0, 0, 0, 0, 0x02, 0x28
                 };
-                final char[] suffix = "&waffle=liege".toCharArray();
+                System.out.println(Arrays.toString(padding));
+                final byte[] suffix = "&waffle=liege".getBytes("UTF-8");
 
-                final char[] p1 = concat(prefix, padding);
-                final char[] newMessageChar = concat(p1, suffix);
+                final byte[] p1 = concat(pt, padding);
+                final byte[] newMessageChar = concat(p1, suffix);
 
                 final byte[] newPt = new String(newMessageChar).getBytes("UTF-8");
-                final MessageDigest sha1 = MessageDigest.getInstance("SHA1");
-                sha1.update(tag);
-                sha1.update("&waffle=liege".getBytes("UTF-8"));
-                final byte[] newTag = sha1.digest();
+                final MessageDigest d = MessageDigest.getInstance("SHA1");
+                d.update(tag);
+                d.update("&waffle=liege".getBytes("UTF-8"));
+                final byte[] newTag = d.digest();
 
                 // print("data = %s", message);
                 print("newPt   = %s", hex(newPt));
@@ -90,16 +90,16 @@ public class AgentCommunicationMITM {
             public void execute() throws Exception {
                 final byte[] pt = incoming.take();
                 final String message = new String(pt, "UTF-8");
-                final byte[] tag = incoming.take();
+                final byte[] tagReceived = incoming.take();
 
-                print("pt   = %s", hex(pt));
-                print("tag  = %s", hex(tag));
+                print("pt     = %s", hex(pt));
+                print("tag_r  = %s", hex(tagReceived));
 
-                final MessageDigest sha1 = MessageDigest.getInstance(this.cipher);
-                final byte[] tag2 = sha1.digest((secret + message).getBytes("UTF-8"));
-                print("tag2 = %s", hex(tag2));
+                final MessageDigest d = MessageDigest.getInstance(cipher);
+                final byte[] tagComputed = d.digest((secret + message).getBytes("UTF-8"));
+                print("tag_c  = %s", hex(tagComputed));
 
-                if (Arrays.equals(tag, tag2))
+                if (Arrays.equals(tagReceived, tagComputed))
                     print("Authenticity and integrity verified.");
                 else
                     print("Failed to verify authenticity and integrity.");
