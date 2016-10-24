@@ -8,18 +8,7 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
-/**
- * I0->I1->A1->B1->[A2]->B2->A3->B3
- * <p/>
- * EXERCISE A2: Study the example.
- * <p/>
- * INFO:
- * http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#Mac
- *
- * @author Iztok Starc <iztok.starc@fri.uni-lj.si>
- * @version 1
- * @date 12. 12. 2011
- */
+
 public class HMACExample {
     public static void main(String[] args)
             throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
@@ -30,16 +19,16 @@ public class HMACExample {
          * STEP 1.
          * Select HMAC algorithm and get new HMAC object instance.
          * Standard Algorithm Names
-         * http://docs.oracle.com/javase/6/docs/technotes/guides/security/StandardNames.html
+         * http://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html
          */
-        final Mac hmacAlgorithm = Mac.getInstance("HmacMD5");
+        final Mac hmacAlgorithm = Mac.getInstance("HmacSHA1");
 
         /**
          * STEP 1.
          * Alice and Bob agree upon a shared secret session key that will be
          * used for hash based message authentication code.
          */
-        final Key hmacKey = KeyGenerator.getInstance("HmacMD5").generateKey();
+        final Key hmacKey = KeyGenerator.getInstance("HmacSHA1").generateKey();
 
         /**
          * STEP 3.

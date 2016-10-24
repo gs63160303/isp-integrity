@@ -4,33 +4,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
-/**
- * I0->I1->A1->[B1]->A2->B2->A3->B3
- * <p/>
- * EXERCISE B1: Providing integrity to agent communications
- * <p/>
- * Special care has to be taken when transferring binary stream over the communication
- * channel, thus, HEX is used to transfer checksums.
- * <p/>
- * A communication channel is implemented by thread-safe blocking queue using
- * linked-list data structure.
- * <p/>
- * Both agents are implemented with class Agent.
- * <p/>
- * Both agents are started at the end of the main method definition below.
- * <p/>
- * EXERCISE:
- * - Study example.
- * - Observe both checksums in hexadecimal format (use Formatter).
- * - Mount a Man-in-The-Middle attack (after B3 is completed).
- * <p/>
- * INFO:
- * http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#MessageDigest
- *
- * @author Iztok Starc <iztok.starc@fri.uni-lj.si>
- * @version 1
- * @date 12. 12. 2011
- */
 public class AgentCommunicationMessageDigest {
 
     private final static Logger LOG = Logger.getLogger(AgentCommunicationMessageDigest.class.getCanonicalName());
@@ -41,8 +14,8 @@ public class AgentCommunicationMessageDigest {
          * STEP 1.
          * Setup an insecure communication channel.
          */
-        final BlockingQueue<String> alice2bob = new LinkedBlockingQueue<>();
-        final BlockingQueue<String> bob2alice = new LinkedBlockingQueue<>();
+        final BlockingQueue<byte[]> alice2bob = new LinkedBlockingQueue<>();
+        final BlockingQueue<byte[]> bob2alice = new LinkedBlockingQueue<>();
 
         /**
          * STEP 2.
@@ -53,34 +26,30 @@ public class AgentCommunicationMessageDigest {
          *   o Message Digest
          * - checks if received and calculated message digest checksum match.
          */
-        final Agent alice = new Agent(bob2alice, alice2bob, null, null, null, "MD5") {
+        final Agent alice = new Agent("alice", bob2alice, alice2bob, null, "MD5") {
 
             @Override
-            public void run() {
-                try {
-                    /**
-                     * STEP 2.1
-                     * Alice writes a message and sends to Bob.
-                     * This action is recorded in Alice's log.
-                     */
-                    final String message = "I love you Bob. Kisses, Alice.";
-                    outgoing.put(message);
+            public void execute() throws Exception {
+                /**
+                 * STEP 2.1
+                 * Alice writes a message and sends to Bob.
+                 * This action is recorded in Alice's log.
+                 */
+                final String message = "I love you Bob. Kisses, Alice.";
+                outgoing.put(message.getBytes("UTF-8"));
 
-                    /**
-                     * TODO: STEP 2.2
-                     * In addition, Alice creates message digest using selected
-                     * hash algorithm.
-                     */
+                /**
+                 * TODO: STEP 2.2
+                 * In addition, Alice creates message digest using selected
+                 * hash algorithm.
+                 */
 
-                    /**
-                     * TODO STEP 2.3
-                     * Special care has to be taken when transferring binary stream 
-                     * over the communication channel: convert byte array into string
-                     * of HEX values with DatatypeConverter.printHexBinary(byte[])
-                     */
-                } catch (Exception e) {
-                    LOG.severe("Exception: " + e.getMessage());
-                }
+                /**
+                 * TODO STEP 2.3
+                 * Special care has to be taken when transferring binary stream
+                 * over the communication channel: convert byte array into string
+                 * of HEX values with DatatypeConverter.printHexBinary(byte[])
+                 */
             }
         };
 
@@ -92,44 +61,40 @@ public class AgentCommunicationMessageDigest {
          *   - message digest
          * - checks if received and calculated message digest checksum match.
          */
-        final Agent bob = new Agent(alice2bob, bob2alice, null, null, null, "MD5") {
+        final Agent bob = new Agent("bob", alice2bob, bob2alice, null, "MD5") {
 
             @Override
-            public void run() {
-                try {
-                    /**
-                     * STEP 3.1
-                     * Bob receives the message from Alice.
-                     * This action is recorded in Bob's log.
-                     */
-                    final String message = incoming.take();
-                    LOG.info("Bob: I have received: " + message);
+            public void execute() throws Exception {
+                /**
+                 * STEP 3.1
+                 * Bob receives the message from Alice.
+                 * This action is recorded in Bob's log.
+                 */
+                final byte[] pt = incoming.take();
+                print("received: %s", new String(pt, "UTF-8"));
 
-                    /**
-                     * TODO STEP 3.2
-                     * Special care has to be taken when transferring binary stream 
-                     * over the communication channel: convert received string into
-                     * byte array with DatatypeConverter.parseHexBinary(String)
-                     */
+                /**
+                 * TODO STEP 3.2
+                 * Special care has to be taken when transferring binary stream
+                 * over the communication channel: convert received string into
+                 * byte array with DatatypeConverter.parseHexBinary(String)
+                 */
 
-                    /**
-                     * TODO: STEP 3.3
-                     * Bob calculates new message digest using selected hash algorithm and
-                     * received text.
-                     */
+                /**
+                 * TODO: STEP 3.3
+                 * Bob calculates new message digest using selected hash algorithm and
+                 * received text.
+                 */
 
-                    /**
-                     * TODO STEP 3.4
-                     * Verify if received and calculated message digest checksum match.
-                     */
+                /**
+                 * TODO STEP 3.4
+                 * Verify if received and calculated message digest checksum match.
+                 */
                     /*if (Arrays.equals(receivedDigest, digestRecomputed)) {
                         LOG.info("Integrity checked");
                     } else {
                         LOG.warning("Integrity check failed.");
                     }*/
-                } catch (Exception e) {
-                    LOG.severe("Exception: " + e.getMessage());
-                }
             }
         };
 
