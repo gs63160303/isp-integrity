@@ -35,7 +35,7 @@ public class Test {
         return DatatypeConverter.printHexBinary(in);
     }
 
-    public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
+    public static void main(String[] args) throws Exception {
         final String secret = "secretsecret22";
         final String m = "count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo";
 
@@ -45,6 +45,25 @@ public class Test {
 
         print("pt      = %s", hex(m.getBytes()));
         print("tag     = %s", hex(tag));
+
+        final SHA sha = new SHA();
+
+        // initial state is the current tag
+        final Field f = sha.getClass().getDeclaredField("state");
+        f.setAccessible(true);
+        int[] initialState = (int[]) f.get(sha);
+
+        for (int j = 0; j < initialState.length; j++) {
+            final int i = 4 * j;
+            final int state = bytesToInt(tag[i], tag[i + 1], tag[i + 2], tag[i + 3]);
+            initialState[j] = state;
+        }
+
+        // increment bytesProcessed
+        final Field bytesProcessed = sha.getClass().getSuperclass().getDeclaredField("bytesProcessed");
+        bytesProcessed.setAccessible(true);
+        bytesProcessed.set(sha, 64L);
+
 
         // mitm
         final byte[] padding = new byte[]{
@@ -56,23 +75,6 @@ public class Test {
         final byte[] suffix = "&waffle=liege".getBytes("UTF-8");
         final byte[] newPt = concat(concat(m.getBytes(), padding), suffix);
 
-        final SHA sha = new SHA();
-
-        final Field f = sha.getClass().getDeclaredField("state");
-        f.setAccessible(true);
-        int[] initialState = (int[]) f.get(sha);
-
-        for (int j = 0; j < initialState.length; j++) {
-            final int i = 4 * j;
-            final int state = bytesToInt(tag[i], tag[i + 1], tag[i + 2], tag[i + 3]);
-            System.out.printf("0x%02x, 0x%02x 0x%02x 0x%02x -> %d%n", tag[i], tag[i + 1], tag[i + 2], tag[i + 3], state);
-            initialState[j] = state;
-        }
-
-        // TODO increment bytesprocessed
-        // final Field p = sha.getClass().getDeclaredField("state");
-        // p.setAccessible(true);
-        // int[] initialState = (int[]) f.get(sha);
 
         final Method engineUpdate = sha.getClass().getSuperclass().getDeclaredMethod("engineUpdate", byte.class);
         engineUpdate.setAccessible(true);
