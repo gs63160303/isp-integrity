@@ -4,10 +4,10 @@ import sun.security.provider.SHA;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.MessageDigest;
-import java.security.MessageDigestSpi;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
@@ -28,7 +28,7 @@ public class Test {
         return DatatypeConverter.printHexBinary(in);
     }
 
-    public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
         final String secret = "secretsecret22";
         final String m = "count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo";
 
@@ -50,12 +50,21 @@ public class Test {
         final byte[] newPt = concat(concat(m.getBytes(), padding), suffix);
 
         final SHA sha = new SHA();
+
+
+        Field f = sha.getClass().getDeclaredField("state"); //NoSuchFieldException
+        f.setAccessible(true);
+        int[] initialState = (int[]) f.get(sha);
+
+        System.out.println(tag.length);
+        System.out.println(initialState.length);
+
+        for (int i = 0; i < tag.length; i++) {
+            initialState[i] = tag[i];
+        }
+
         final Method engineUpdate = sha.getClass().getSuperclass().getDeclaredMethod("engineUpdate", byte.class);
         engineUpdate.setAccessible(true);
-
-        for (byte b : tag) {
-            engineUpdate.invoke(sha, b);
-        }
 
         for (byte b : suffix) {
             engineUpdate.invoke(sha, b);
