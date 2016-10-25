@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Random;
 
 public class T2 {
 
@@ -28,13 +29,16 @@ public class T2 {
     }
 
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        final String secret = "secretsecret22";
+        // final String secret = "secretsecret22";
+        final Random rnd = new Random();
+        final byte[] bytes = new byte[1024];
+        rnd.nextBytes(bytes);
 
         final SHA sha = new SHA();
         final Method engineUpdate = sha.getClass().getSuperclass().getDeclaredMethod("engineUpdate", byte.class);
         engineUpdate.setAccessible(true);
 
-        for (byte b : secret.getBytes()) {
+        for (byte b : bytes) {
             engineUpdate.invoke(sha, b);
         }
 
@@ -45,7 +49,7 @@ public class T2 {
         print("%s", hex(digest));
 
         MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-        print("%s", hex(sha1.digest(secret.getBytes())));
+        print("%s", hex(sha1.digest(bytes)));
 
     }
 }

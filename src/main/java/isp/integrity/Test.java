@@ -24,6 +24,13 @@ public class Test {
         System.out.println();
     }
 
+    private static int bytesToInt(byte... bytes) {
+        return ((0xFF & bytes[0]) << 24
+                | (0xFF & bytes[1]) << 16
+                | (0xFF & bytes[2]) << 8
+                | (0xFF & bytes[3]));
+    }
+
     public static String hex(byte[] in) {
         return DatatypeConverter.printHexBinary(in);
     }
@@ -44,24 +51,28 @@ public class Test {
                 (byte) 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0x45//0x02, 0x28
+                0, 0, 0, 0, 0, 0, 0x02, 0x28
         };
         final byte[] suffix = "&waffle=liege".getBytes("UTF-8");
         final byte[] newPt = concat(concat(m.getBytes(), padding), suffix);
 
         final SHA sha = new SHA();
 
-
-        Field f = sha.getClass().getDeclaredField("state"); //NoSuchFieldException
+        final Field f = sha.getClass().getDeclaredField("state");
         f.setAccessible(true);
         int[] initialState = (int[]) f.get(sha);
 
-        System.out.println(tag.length);
-        System.out.println(initialState.length);
-
-        for (int i = 0; i < tag.length; i++) {
-            initialState[i] = tag[i];
+        for (int j = 0; j < initialState.length; j++) {
+            final int i = 4 * j;
+            final int state = bytesToInt(tag[i], tag[i + 1], tag[i + 2], tag[i + 3]);
+            System.out.printf("0x%02x, 0x%02x 0x%02x 0x%02x -> %d%n", tag[i], tag[i + 1], tag[i + 2], tag[i + 3], state);
+            initialState[j] = state;
         }
+
+        // TODO increment bytesprocessed
+        // final Field p = sha.getClass().getDeclaredField("state");
+        // p.setAccessible(true);
+        // int[] initialState = (int[]) f.get(sha);
 
         final Method engineUpdate = sha.getClass().getSuperclass().getDeclaredMethod("engineUpdate", byte.class);
         engineUpdate.setAccessible(true);
