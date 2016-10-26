@@ -22,30 +22,18 @@ public class T1 {
         return DatatypeConverter.printHexBinary(in);
     }
 
-    public static  int fromArray(byte[] payload){
+    public static int fromArray(byte[] payload) {
         ByteBuffer buffer = ByteBuffer.wrap(payload);
-        buffer.order(ByteOrder.BIG_ENDIAN);
         return buffer.getInt();
     }
 
-    public static byte[] toArray(long value){
-        ByteBuffer buffer = ByteBuffer.allocate(8);
-        buffer.order(ByteOrder.BIG_ENDIAN);
-        buffer.putLong(value);
-        buffer.flip();
+    public static byte[] toArray(int value) {
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.putInt(value);
         return buffer.array();
     }
 
     public static void main(String[] args) throws Exception {
-        int a = 1024 * 1024;
-        final byte[] bytes = toArray(a);
-        System.out.println(Arrays.toString(bytes));
-
-        byte b = (byte) (a >>> 24);
-        byte c = (byte) (a >>> 16);
-        byte d = (byte) (a >>> 8);
-        byte e = (byte) a;
-
-        print("%d %d %d %d", b, c, d, e);
+        System.out.printf("%d", 0x1b);
     }
 }
