@@ -99,9 +99,9 @@ public class Test {
         print("tag_c   = %s", hex(tagComputed));
 
         if (Arrays.equals(newTag, tagComputed))
-            print("Authenticity and integrity verified.");
+            print("SUCCESS");
         else
-            print("Failed to verify authenticity and integrity.");
+            System.err.println("FAILURE");
 
     }
 }
