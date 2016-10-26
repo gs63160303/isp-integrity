@@ -27,7 +27,7 @@ public class AgentCommunicationMITM {
         final BlockingQueue<byte[]> alice2mitm = new LinkedBlockingQueue<>();
         final BlockingQueue<byte[]> mitm2service = new LinkedBlockingQueue<>();
 
-        final Agent client = new Agent("CLIENT 1", alice2mitm, null, null, "SHA1") {
+        final Agent client = new Agent("CLIENT 1", alice2mitm, null, null, "SHA-1") {
             @Override
             public void execute() throws Exception {
                 final String message = "count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo";
@@ -67,7 +67,7 @@ public class AgentCommunicationMITM {
             }
         };
 
-        final Agent service = new Agent("SERVICE", null, mitm2service, null, "SHA1") {
+        final Agent service = new Agent("SERVICE", null, mitm2service, null, "SHA-1") {
             @Override
             public void execute() throws Exception {
                 final byte[] pt = incoming.take();

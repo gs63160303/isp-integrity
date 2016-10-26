@@ -21,7 +21,7 @@ public class AgentCommunicationMessageDigest {
          *   o Message Digest
          * - checks if received and calculated message digest checksum match.
          */
-        final Agent alice = new Agent("alice", bob2alice, alice2bob, null, "SHA256") {
+        final Agent alice = new Agent("alice", bob2alice, alice2bob, null, "SHA-256") {
 
             @Override
             public void execute() throws Exception {
@@ -48,7 +48,7 @@ public class AgentCommunicationMessageDigest {
          *   - message digest
          * - checks if received and calculated message digest checksum match.
          */
-        final Agent bob = new Agent("bob", alice2bob, bob2alice, null, "SHA256") {
+        final Agent bob = new Agent("bob", alice2bob, bob2alice, null, "SHA-256") {
             @Override
             public void execute() throws Exception {
                 /*
