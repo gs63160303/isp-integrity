@@ -56,13 +56,6 @@ public class AgentCommunicationSignature {
                  * In addition, Alice signs message using selected
                  * algorithm and her private key.
                  */
-
-                final Signature rsa = Signature.getInstance(cipher);
-                rsa.initSign((PrivateKey) cipherKey);
-                rsa.update(text.getBytes("UTF-8"));
-                final byte[] signature = rsa.sign();
-                outgoing.put(signature);
-
             }
         };
 
@@ -89,19 +82,11 @@ public class AgentCommunicationSignature {
                  * Bob setups signature verification. He has to provide
                  * received text and Alice's public key.
                  */
-                final Signature rsa = Signature.getInstance(cipher);
-                rsa.initVerify((PublicKey) cipherKey);
-                rsa.update(pt);
 
                 /*
                  * TODO: STEP 4.3
                  * Bob verifies Alice's signature.
                  */
-                if (rsa.verify(incoming.take()))
-                    print("Signature OK");
-                else
-                    print("Invalid signature");
-
             }
         };
 

@@ -52,11 +52,6 @@ public class AgentCommunicationHMAC {
                  * In addition, Alice creates HMAC using selected
                  * hash algorithm and shared secret session key.
                  */
-                final Mac hmac = Mac.getInstance(this.cipher);
-                hmac.init(this.cipherKey);
-                hmac.update(pt);
-                final byte[] mac = hmac.doFinal();
-                outgoing.put(mac);
             }
         };
 
@@ -88,20 +83,10 @@ public class AgentCommunicationHMAC {
                  * shared secret session key and received text.
                  */
 
-                final Mac hmac = Mac.getInstance(this.cipher);
-                hmac.init(this.cipherKey);
-                hmac.update(pt);
-                final byte[] recomputedHmac = hmac.doFinal();
-
                 /**
                  * TODO: STEP 4.4
                  * Verify if received and calculated HMAC match.
                  */
-                if (Arrays.equals(recomputedHmac, receivedHmac))
-                    print("Authenticity and integrity verified.");
-                else
-                    print("Failed to verify authenticity and integrity.");
-
             }
         };
 

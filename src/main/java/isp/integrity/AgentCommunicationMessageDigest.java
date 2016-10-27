@@ -45,8 +45,6 @@ public class AgentCommunicationMessageDigest {
                  * In addition, Alice creates message digest using selected
                  * hash algorithm.
                  */
-                final MessageDigest md = MessageDigest.getInstance(cipher);
-                outgoing.put(md.digest(message.getBytes("UTF-8")));
             }
         };
 
@@ -74,16 +72,8 @@ public class AgentCommunicationMessageDigest {
                  * Bob calculates new message digest using selected hash algorithm and
                  * received text.
                  */
-                final byte[] receivedDigest = incoming.take();
-                final MessageDigest md = MessageDigest.getInstance(cipher);
-                final byte[] recomputedDigest = md.digest(pt);
 
                 // TODO STEP 3.3 Verify if received and calculated message digest checksum match.
-                if (Arrays.equals(receivedDigest, recomputedDigest)) {
-                    print("Integrity checked");
-                } else {
-                    print("Integrity check failed.");
-                }
             }
         };
 

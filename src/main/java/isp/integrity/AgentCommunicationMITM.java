@@ -65,54 +65,8 @@ public class AgentCommunicationMITM {
                 //     count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo&waffle=liege
                 // You can also assume to know the length of the secret
 
-                // Data to be added
-                final byte[] addition = "&waffle=liege".getBytes("UTF8");
-
-                // old message size (we know this)
-                final int oldMessageSize = pt.length + sharedSecret.length;
-
-                // CEIL(oldMessage + 8 bytes [for length] + 1 byte [for 0x80])
-                final int numBlocks = (int) Math.ceil((oldMessageSize + 9.0) / 64.0);
-
-                // Compute the tag with additional data
-                final ModifiedSHA1 mySHA = new ModifiedSHA1();
-                mySHA.setState(tag, numBlocks);
-                mySHA.update(addition);
-                final byte[] newTag = mySHA.digest();
-
-                print("newTag  = %s", hex(newTag));
-
-                // create a new PT; size = original [multiple of blocks] + addition - secret
-                final byte[] newPt = new byte[ModifiedSHA1.BLOCK_SIZE * numBlocks + addition.length - sharedSecret.length];
-                int offset = 0;
-
-                // copy original PT to the newPT
-                System.arraycopy(pt, 0, newPt, offset, pt.length);
-                offset += pt.length;
-
-                // recreate the original padding (without length)
-                final int paddingLength = ModifiedSHA1.BLOCK_SIZE * numBlocks - pt.length - sharedSecret.length - 8;
-                System.arraycopy(ModifiedSHA1.PADDING, 0, newPt, offset, paddingLength);
-                offset += paddingLength;
-
-                // add the length part of padding
-                // the length has to be in bits!
-                // format: 8 bytes (Java long) in big endian!
-                // detail: https://tools.ietf.org/html/rfc3174#page-4
-                final ByteBuffer buffer = ByteBuffer.allocate(8);
-                buffer.order(ByteOrder.BIG_ENDIAN);
-                buffer.putLong(oldMessageSize * 8);
-                final byte[] messageSizeBytes = buffer.array();
-                System.arraycopy(messageSizeBytes, 0, newPt, offset, messageSizeBytes.length);
-                offset += messageSizeBytes.length;
-
-                // add the addition
-                System.arraycopy(addition, 0, newPt, offset, addition.length);
-
-                print("newData = %s", new String(newPt, "UTF-8"));
-
-                outgoing.put(newPt);
-                outgoing.put(newTag);
+                outgoing.put(pt);
+                outgoing.put(tag);
             }
         };
 
