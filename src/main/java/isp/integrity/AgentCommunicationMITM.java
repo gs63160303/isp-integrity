@@ -7,6 +7,19 @@ import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * As the man (or a woman) in the middle (MITM), intercept a message from Alice,
+ * modify parameters as instructed, and create a tag that will successfully verify.
+ * <p>
+ * Useful resources:
+ * - SHA-1 RFC https://tools.ietf.org/html/rfc3174 (section o padding in particular)
+ * - Wikipedia entry: https://en.wikipedia.org/wiki/Length_extension_attack
+ * <p>
+ * You can assume to know the length of the plaintext and the length of the secret that is used
+ * for MAC-ing.
+ * <p>
+ * To manually set the internal state of the SHA-1 algorithm, use the {@link ModifiedSHA1} class.
+ */
 public class AgentCommunicationMITM {
 
     public static void main(String[] args) throws Exception {
@@ -84,7 +97,7 @@ public class AgentCommunicationMITM {
 
                 // add the length part of padding
                 // the length has to be in bits!
-                // format: 8 bytes (Java long) and  in big endian!
+                // format: 8 bytes (Java long) in big endian!
                 // detail: https://tools.ietf.org/html/rfc3174#page-4
                 final ByteBuffer buffer = ByteBuffer.allocate(8);
                 buffer.order(ByteOrder.BIG_ENDIAN);
@@ -117,13 +130,11 @@ public class AgentCommunicationMITM {
 
                 print("data   = %s", new String(pt, "UTF-8"));
                 print("pt     = %s", hex(pt));
-                print("tag_r  = %s", hex(tag));
-                print("tag_c  = %s", hex(tagComputed));
 
                 if (Arrays.equals(tag, tagComputed))
-                    print("Authenticity and integrity verified.");
+                    print("MAC verification succeeds: %s == %s", hex(tag), hex(tagComputed));
                 else
-                    print("Failed to verify authenticity and integrity.");
+                    print("MAC verification fails: %s != %s", hex(tag), hex(tagComputed));
             }
         };
 
