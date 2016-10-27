@@ -1,17 +1,17 @@
 package isp.integrity;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class AgentCommunicationMITM {
-    public static void main(String[] args) throws NoSuchAlgorithmException {
+
+    public static void main(String[] args) throws Exception {
         // secret shared between client1 and the service
-        final String secret = "secretsecret22";
+        final byte[] sharedSecret = "secretsecret22".getBytes("UTF-8");
 
         final BlockingQueue<byte[]> alice2mitm = new LinkedBlockingQueue<>();
         final BlockingQueue<byte[]> mitm2service = new LinkedBlockingQueue<>();
@@ -23,8 +23,9 @@ public class AgentCommunicationMITM {
                 final byte[] pt = message.getBytes("UTF-8");
 
                 final MessageDigest d = MessageDigest.getInstance(cipher);
-                d.update(secret.getBytes("UTF-8"));
-                final byte[] tag = d.digest(pt);
+                d.update(sharedSecret);
+                d.update(pt);
+                final byte[] tag = d.digest();
 
                 print("data = %s", message);
                 print("pt   = %s", hex(pt));
@@ -35,7 +36,7 @@ public class AgentCommunicationMITM {
             }
         };
 
-        final Agent mitm = new Agent("MITM (Client 2)", mitm2service, alice2mitm, null, null) {
+        final Agent mitm = new Agent("MITM", mitm2service, alice2mitm, null, null) {
             @Override
             public void execute() throws Exception {
                 final byte[] pt = incoming.take();
@@ -44,13 +45,61 @@ public class AgentCommunicationMITM {
                 print("data    = %s", message);
                 print("pt      = %s", hex(pt));
                 print("tag     = %s", hex(tag));
-                outgoing.put(pt);
-                outgoing.put(tag);
 
                 // TODO: manipulate the parameters and send another valid request
                 // You can assume that when the parameters repeat, the service uses the right-most value
                 // For instance, to change the name of the waffle, you could send the following request
                 //     count=10&lat=37.351&user_id=1&long=-119.827&waffle=eggo&waffle=liege
+                // You can also assume to know the length of the secret
+
+                // Data to be added
+                final byte[] addition = "&waffle=liege".getBytes("UTF8");
+
+                // old message size (we know this)
+                final int oldMessageSize = pt.length + sharedSecret.length;
+
+                // CEIL(oldMessage + 8 bytes [for length] + 1 byte [for 0x80])
+                final int numBlocks = (int) Math.ceil((oldMessageSize + 9.0) / 64.0);
+
+                // Compute the tag with additional data
+                final ModifiedSHA1 mySHA = new ModifiedSHA1();
+                mySHA.setState(tag, numBlocks);
+                mySHA.update(addition);
+                final byte[] newTag = mySHA.digest();
+
+                print("newTag  = %s", hex(newTag));
+
+                // create a new PT; size = original [multiple of blocks] + addition - secret
+                final byte[] newPt = new byte[ModifiedSHA1.BLOCK_SIZE * numBlocks + addition.length - sharedSecret.length];
+                int offset = 0;
+
+                // copy original PT to the newPT
+                System.arraycopy(pt, 0, newPt, offset, pt.length);
+                offset += pt.length;
+
+                // recreate the original padding (without length)
+                final int paddingLength = ModifiedSHA1.BLOCK_SIZE * numBlocks - pt.length - sharedSecret.length - 8;
+                System.arraycopy(ModifiedSHA1.PADDING, 0, newPt, offset, paddingLength);
+                offset += paddingLength;
+
+                // add the length part of padding
+                // the length has to be in bits!
+                // format: 8 bytes (Java long) and  in big endian!
+                // detail: https://tools.ietf.org/html/rfc3174#page-4
+                final ByteBuffer buffer = ByteBuffer.allocate(8);
+                buffer.order(ByteOrder.BIG_ENDIAN);
+                buffer.putLong(oldMessageSize * 8);
+                final byte[] messageSizeBytes = buffer.array();
+                System.arraycopy(messageSizeBytes, 0, newPt, offset, messageSizeBytes.length);
+                offset += messageSizeBytes.length;
+
+                // add the addition
+                System.arraycopy(addition, 0, newPt, offset, addition.length);
+
+                print("newData = %s", new String(newPt, "UTF-8"));
+
+                outgoing.put(newPt);
+                outgoing.put(newTag);
             }
         };
 
@@ -58,23 +107,20 @@ public class AgentCommunicationMITM {
             @Override
             public void execute() throws Exception {
                 final byte[] pt = incoming.take();
-                final String message = new String(pt, "UTF-8");
-                final byte[] tagReceived = incoming.take();
+                final byte[] tag = incoming.take();
 
-                final Map<String, String> params = new HashMap<>();
-                Arrays.stream(message.split("&")).forEach(p -> {
-                    final String[] nameValue = p.split("=");
-                    params.put(nameValue[0], nameValue[1]);
-                });
-                print("data   = %s", params);
-                print("pt     = %s", hex(pt));
-                print("tag_r  = %s", hex(tagReceived));
-
+                // recompute the tag
                 final MessageDigest d = MessageDigest.getInstance(cipher);
-                final byte[] tagComputed = d.digest((secret + message).getBytes("UTF-8"));
+                d.update(sharedSecret);
+                d.update(pt);
+                final byte[] tagComputed = d.digest();
+
+                print("data   = %s", new String(pt, "UTF-8"));
+                print("pt     = %s", hex(pt));
+                print("tag_r  = %s", hex(tag));
                 print("tag_c  = %s", hex(tagComputed));
 
-                if (Arrays.equals(tagReceived, tagComputed))
+                if (Arrays.equals(tag, tagComputed))
                     print("Authenticity and integrity verified.");
                 else
                     print("Failed to verify authenticity and integrity.");
