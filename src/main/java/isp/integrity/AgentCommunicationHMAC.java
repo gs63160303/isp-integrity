@@ -1,9 +1,5 @@
 package isp.integrity; /**
- * I0->I1->A1->B1->A2->[B2]->A3->B3
- * <p/>
- * EXERCISE B2:
- * An agent communication example. Message Authenticity and Integrity
- * is provided using Hash algorithm and Shared Secret Key.
+ * Message Authenticity and Integrity are provided using Hash algorithm and Shared Secret Key.
  * http://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#Mac
  */
 
@@ -22,7 +18,7 @@ public class AgentCommunicationHMAC {
          * Alice and Bob agree upon a shared secret session key that will be 
          * used for hash based message authentication code.
          */
-        final Key hmacKey = KeyGenerator.getInstance("HmacMD5").generateKey();
+        final Key hmacKey = KeyGenerator.getInstance("HmacSHA256").generateKey();
 
         /**
          * STEP 2.
@@ -40,7 +36,7 @@ public class AgentCommunicationHMAC {
          *   o message
          *   o HMAC.
          */
-        final Agent alice = new Agent("alice", bob2alice, alice2bob, hmacKey, "HmacMD5") {
+        final Agent alice = new Agent("alice", bob2alice, alice2bob, hmacKey, "HmacSHA256") {
             @Override
             public void execute() throws Exception {
                 /**
@@ -73,7 +69,7 @@ public class AgentCommunicationHMAC {
          * - uses shared secret session key to
          *   verify message authenticity and integrity.
          */
-        final Agent bob = new Agent("bob", alice2bob, bob2alice, hmacKey, "HmacMD5") {
+        final Agent bob = new Agent("bob", alice2bob, bob2alice, hmacKey, "HmacSHA256") {
 
             @Override
             public void execute() throws Exception {

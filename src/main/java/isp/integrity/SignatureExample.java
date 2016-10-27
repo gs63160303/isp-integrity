@@ -1,32 +1,12 @@
 package isp.integrity;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
-import java.security.SignatureException;
 
-/**
- * I0->I1->A1->B1->A2->B2->[A3]->B3
- * <p/>
- * EXERCISE A3:
- * <p/>
- * EXERCISE:
- * - Study this example.
- * <p/>
- * INFO:
- * http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#Signature
- *
- * @author Iztok Starc <iztok.starc@fri.uni-lj.si>
- * @version 1
- * @date 12. 12. 2011
- */
 public class SignatureExample {
-    public static void main(String[] args)
-            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
+    public static void main(String[] args) throws Exception {
 
         // The message we want to sign
         final String text = "We would like to provide data integrity.";
@@ -34,15 +14,14 @@ public class SignatureExample {
         /**
          * STEP 1.
          * We create a public-private key pair.
-         * Standard Algorithm Names
-         * http://docs.oracle.com/javase/6/docs/technotes/guides/security/StandardNames.html
+         * http://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html
          */
         final KeyPair key = KeyPairGenerator.getInstance("RSA").generateKeyPair();
 
         /**
          * Alice creates Signature object defining Signature algorithm.
          */
-        final Signature signatureAlg = Signature.getInstance("SHA1withRSA");
+        final Signature signatureAlg = Signature.getInstance("SHA256withRSA");
 
         /**
          * We initialize the signature object with
@@ -60,7 +39,7 @@ public class SignatureExample {
          * To verify the signature, we create another signature object
          * and specify its algorithm
          */
-        final Signature signatureAlg2 = Signature.getInstance("SHA1withRSA");
+        final Signature signatureAlg2 = Signature.getInstance("SHA256withRSA");
 
         /**
          * We have to initialize it with the mode. But to verify the algorithm,

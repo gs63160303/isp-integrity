@@ -1,5 +1,7 @@
 package isp.integrity;
 
+import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
@@ -26,7 +28,7 @@ public class AgentCommunicationMessageDigest {
          *   o Message Digest
          * - checks if received and calculated message digest checksum match.
          */
-        final Agent alice = new Agent("alice", bob2alice, alice2bob, null, "MD5") {
+        final Agent alice = new Agent("alice", bob2alice, alice2bob, null, "SHA-256") {
 
             @Override
             public void execute() throws Exception {
@@ -43,13 +45,8 @@ public class AgentCommunicationMessageDigest {
                  * In addition, Alice creates message digest using selected
                  * hash algorithm.
                  */
-
-                /**
-                 * TODO STEP 2.3
-                 * Special care has to be taken when transferring binary stream
-                 * over the communication channel: convert byte array into string
-                 * of HEX values with DatatypeConverter.printHexBinary(byte[])
-                 */
+                final MessageDigest md = MessageDigest.getInstance(cipher);
+                outgoing.put(md.digest(message.getBytes("UTF-8")));
             }
         };
 
@@ -61,8 +58,7 @@ public class AgentCommunicationMessageDigest {
          *   - message digest
          * - checks if received and calculated message digest checksum match.
          */
-        final Agent bob = new Agent("bob", alice2bob, bob2alice, null, "MD5") {
-
+        final Agent bob = new Agent("bob", alice2bob, bob2alice, null, "SHA-256") {
             @Override
             public void execute() throws Exception {
                 /**
@@ -74,34 +70,23 @@ public class AgentCommunicationMessageDigest {
                 print("received: %s", new String(pt, "UTF-8"));
 
                 /**
-                 * TODO STEP 3.2
-                 * Special care has to be taken when transferring binary stream
-                 * over the communication channel: convert received string into
-                 * byte array with DatatypeConverter.parseHexBinary(String)
-                 */
-
-                /**
-                 * TODO: STEP 3.3
+                 * TODO: STEP 3.2
                  * Bob calculates new message digest using selected hash algorithm and
                  * received text.
                  */
+                final byte[] receivedDigest = incoming.take();
+                final MessageDigest md = MessageDigest.getInstance(cipher);
+                final byte[] recomputedDigest = md.digest(pt);
 
-                /**
-                 * TODO STEP 3.4
-                 * Verify if received and calculated message digest checksum match.
-                 */
-                    /*if (Arrays.equals(receivedDigest, digestRecomputed)) {
-                        LOG.info("Integrity checked");
-                    } else {
-                        LOG.warning("Integrity check failed.");
-                    }*/
+                // TODO STEP 3.3 Verify if received and calculated message digest checksum match.
+                if (Arrays.equals(receivedDigest, recomputedDigest)) {
+                    print("Integrity checked");
+                } else {
+                    print("Integrity check failed.");
+                }
             }
         };
 
-        /**
-         * STEP 4.
-         * Two commands below "fire" both agents and the fun begins ... :-)
-         */
         bob.start();
         alice.start();
     }

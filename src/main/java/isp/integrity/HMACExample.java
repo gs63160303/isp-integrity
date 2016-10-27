@@ -3,15 +3,10 @@ package isp.integrity;
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.xml.bind.DatatypeConverter;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-
 
 public class HMACExample {
-    public static void main(String[] args)
-            throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+    public static void main(String[] args) throws Exception {
 
         final String message = "We would like to provide data integrity for this message.";
 
@@ -21,14 +16,14 @@ public class HMACExample {
          * Standard Algorithm Names
          * http://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html
          */
-        final Mac hmacAlgorithm = Mac.getInstance("HmacSHA1");
+        final Mac hmacAlgorithm = Mac.getInstance("HmacSHA256");
 
         /**
          * STEP 1.
          * Alice and Bob agree upon a shared secret session key that will be
          * used for hash based message authentication code.
          */
-        final Key hmacKey = KeyGenerator.getInstance("HmacSHA1").generateKey();
+        final Key hmacKey = KeyGenerator.getInstance("HmacSHA256").generateKey();
 
         /**
          * STEP 3.
