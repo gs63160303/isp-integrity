@@ -1,7 +1,5 @@
 package isp.integrity;
 
-import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
