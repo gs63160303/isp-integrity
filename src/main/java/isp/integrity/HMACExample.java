@@ -1,8 +1,10 @@
 package isp.integrity;
 
+import fri.isp.Agent;
+
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
-import javax.xml.bind.DatatypeConverter;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
@@ -33,13 +35,13 @@ public class HMACExample {
          * Initialize HMAC and provide shared secret session key. Create an HMAC tag.
          */
         alice.init(key);
-        final byte[] tag1 = alice.doFinal(message.getBytes("UTF-8"));
+        final byte[] tag1 = alice.doFinal(message.getBytes(StandardCharsets.UTF_8));
 
         /*
          * STEP 4.
          * Print out HMAC.
          */
-        final String messageHmacAsString = DatatypeConverter.printHexBinary(tag1);
+        final String messageHmacAsString = Agent.hex(tag1);
         System.out.println("HMAC: " + messageHmacAsString);
 
         /*
@@ -48,7 +50,7 @@ public class HMACExample {
          */
         final Mac bob = Mac.getInstance("HmacSHA256");
         bob.init(key);
-        final byte[] tag2 = bob.doFinal(message.getBytes("UTF-8"));
+        final byte[] tag2 = bob.doFinal(message.getBytes(StandardCharsets.UTF_8));
 
         // Is the mac correct?
 
@@ -66,7 +68,7 @@ public class HMACExample {
         /*
             FIXME: This is insecure
             - The comparison is done byte by byte
-            - The comparator returns false immidiately after the first inequality of bytes is found
+            - The comparator returns false immediately after the first inequality of bytes is found
             (Use CTRL+click and see how the  Arrays.equals() is implemented)
          */
         return Arrays.equals(tag1, tag2);
