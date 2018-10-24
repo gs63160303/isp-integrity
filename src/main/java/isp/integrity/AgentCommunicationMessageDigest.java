@@ -5,6 +5,10 @@ import fri.isp.Environment;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * An MITM example showing how merely using a collision-resistant hash
+ * function is insufficient to protect against tampering
+ */
 public class AgentCommunicationMessageDigest {
 
     public static void main(String[] args) {
@@ -19,10 +23,24 @@ public class AgentCommunicationMessageDigest {
                  *   - a message
                  *   - and a message Digest
                  */
-                final String message = "I hope you get this message intact. Kisses, Alice.";
-                send("bob", message.getBytes(StandardCharsets.UTF_8));
+                final byte[] message = "I hope you get this message intact. Kisses, Alice.".getBytes(StandardCharsets.UTF_8);
 
-                // TODO: Alice creates message digest using SHA-256.
+                // TODO: Create the digest and send the (message, digest) pair
+            }
+        });
+
+        env.add(new Agent("mallory") {
+            @Override
+            public void task() throws Exception {
+                // Intercept the message from Alice
+                final byte[] message = receive("alice");
+                final byte[] tag = receive("alice");
+
+                // TODO: Modify the message
+
+                // Forward the modified message
+                send("bob", message);
+                send("bob", tag);
             }
         });
 
@@ -36,11 +54,14 @@ public class AgentCommunicationMessageDigest {
                  *   - message digest
                  * - checks if received and calculated message digest checksum match.
                  */
+                final byte[] message = receive("alice");
+                final byte[] tag = receive("alice");
 
+                // TODO: Check if the received (message, digest) pair is valid
             }
         });
 
-        env.connect("alice", "bob");
+        env.mitm("alice", "bob", "mallory");
         env.start();
     }
 }
