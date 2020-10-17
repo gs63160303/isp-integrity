@@ -12,15 +12,13 @@ import java.nio.charset.StandardCharsets;
  * An example of using the authenticated encryption cipher.
  * <p>
  * During the encryption, the Galois-Counter mode automatically
- * creates a MAC and then, during the decryption, it verifies it.
+ * creates a MAC and verifies it during the decryption.
  * <p>
  * What happens, if the cipher text gets modified?
  * What happens, if the IV gets modified?
  * What happens, if the key is incorrect?
  */
 public class GCMExample {
-
-
     public static void main(String[] args) throws Exception {
         // shared key
         final SecretKey sharedKey = KeyGenerator.getInstance("AES").generateKey();

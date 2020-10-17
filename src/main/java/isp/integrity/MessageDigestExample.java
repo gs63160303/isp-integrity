@@ -2,21 +2,20 @@ package isp.integrity;
 
 import fri.isp.Agent;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class MessageDigestExample {
 
-    public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public static void main(String[] args) throws NoSuchAlgorithmException {
 
         final String message = "We would like to provide data integrity.";
 
         /*
          * STEP 1.
          * Select Message Digest algorithm and get new Message Digest object instance
-         * http://docs.oracle.com/javase/6/docs/technotes/guides/security/StandardNames.html
+         * http://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html
          */
         final MessageDigest digestAlgorithm = MessageDigest.getInstance("SHA-256");
 
